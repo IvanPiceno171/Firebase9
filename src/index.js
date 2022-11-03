@@ -3,7 +3,10 @@
 import {initializeApp} from 'firebase/app'
 import {
     getFirestore, collection, onSnapshot, 
-    addDoc, deleteDoc, doc
+    addDoc, deleteDoc, doc,
+    query, where,
+    orderBy, serverTimestamp,
+    getDoc, updateDoc
 } from 'firebase/firestore'
 // import { env } from 'process';
 
@@ -28,8 +31,12 @@ const db = getFirestore()
 // collection ref
 const colRef = collection(db, 'books')
 
+// quieres
+// const q = query(colRef, where("author", "==", "Jk rowlings"), orderBy('createdAt'))
+const q = query(colRef, orderBy('createdAt'))
+
 // real time collection data
-onSnapshot(colRef, (snapshot)=>{
+onSnapshot(q, (snapshot)=>{
       let books = [];
       // loops snapshot.docs and adds data() method
       //...doc is the spread operator
@@ -53,6 +60,7 @@ function addBook(event){
     addDoc(colRef, {
         title: addBookForm.title.value,
         author: addBookForm.author.value,
+        createdAt: serverTimestamp()
     })
     .then(()=>{
         // resets input fields to blank
@@ -71,11 +79,36 @@ deleteBookForm.addEventListener('submit', (e)=>{
     // 'books' name of database
     // grabs id from database and deletes value
     const docRef = doc(db, 'books', deleteBookForm.id.value) 
-
+    
     //async can add then & catch 
     deleteDoc(docRef)
-        .then(()=>{
-            //resets delete input to blank
-            deleteBookForm.reset()
+    .then(()=>{
+        //resets delete input to blank
+        deleteBookForm.reset()
         })
+})
+
+
+//single document
+const docRef = doc(db, 'books', 'p3PY6LHVgGITvCI2LhMe')
+
+onSnapshot(docRef, (doc) =>{
+    // data method to grab data
+    // doc.id logs documents id
+    console.log(doc.data(), doc.id)
+})
+
+// updating a document
+const updateForm = document.querySelector('.update')
+updateForm.addEventListener('submit', (e) => {
+    e.preventDefault()
+    
+    let docRef = doc(db, 'books', updateForm.id.value)
+    
+    updateDoc(docRef, {
+        title: 'updated title'
+    })
+    .then(() => {
+        updateForm.reset()
+    })
 })
